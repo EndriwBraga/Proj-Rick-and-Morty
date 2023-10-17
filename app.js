@@ -26,7 +26,7 @@ async function render ({characters}) {
 
     displayNoCharactersMessage(characters)
 
-    characters.forEach((character) =>{
+    characters?.forEach((character) =>{
         return charsContainer.innerHTML += `
         <div class="char">
             <img src="${character.image}" alt="">
@@ -37,7 +37,6 @@ async function render ({characters}) {
         </div> `  
     })
 }
-
 
 function handleFilterChange(type, event){
     return async () => {
@@ -89,7 +88,7 @@ function debounceSearch() {
     }, DEBOUNCE_DELAY);
 }
 
-function handleSearchInputChange(event) {
+function handleSearchInputChange() {
     noCharactersFound.innerHTML = '';
     debounceSearch();
 }
