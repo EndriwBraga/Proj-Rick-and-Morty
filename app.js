@@ -4,6 +4,7 @@ const speciesFilter = document.querySelector('#species');
 const genderFilter = document.querySelector('#gender');
 const statusFilter = document.querySelector('#status');
 const loadMoreButton = document.querySelector('#load-more')
+const noCharactersFound = document.querySelector('#noCharactersFound');
 
 const API = 'https://rickandmortyapi.com/api';
 const defaultFilters = {
@@ -22,8 +23,10 @@ async function getCharacters({ name, species, gender, status, page = 1}) {
 };
 
 async function render ({characters}) {
-    characters.forEach((character) =>{
 
+    displayNoCharactersMessage(characters)
+
+    characters.forEach((character) =>{
         return charsContainer.innerHTML += `
         <div class="char">
             <img src="${character.image}" alt="">
@@ -34,6 +37,7 @@ async function render ({characters}) {
         </div> `  
     })
 }
+
 
 function handleFilterChange(type, event){
     return async () => {
@@ -51,30 +55,59 @@ async function handleLoadMore(){
 }
 
 function addListeners () {
-    speciesFilter.addEventListener('change', async (event) =>{
+    speciesFilter.addEventListener('change', (event) =>{
         handleFilterChange('species', event) ()
     });
     
-    genderFilter.addEventListener('change', async (event) =>{
+    genderFilter.addEventListener('change', (event) =>{
         handleFilterChange('gender', event) ()
     });
     
-    statusFilter.addEventListener('change', async (event) =>{
+    statusFilter.addEventListener('change', (event) =>{
         handleFilterChange('status', event) ()
     });
     
-    searchInput.addEventListener('keyup', async (event) =>{
+    searchInput.addEventListener('keyup', (event) =>{
         handleFilterChange('name', event) ()
     })
 
     loadMoreButton.addEventListener('click', handleLoadMore);
 }
 
+const DEBOUNCE_DELAY = 800;
 
-async function main(){
-    const characters = await getCharacters(defaultFilters);
-    addListeners ()
-    render({characters});
+let debounceTimeout;
+
+function debounceSearch() {
+    clearTimeout(debounceTimeout);
+    debounceTimeout = setTimeout(async () => {
+        const searchTerm = searchInput.value;
+        defaultFilters.name = searchTerm;
+        charsContainer.innerHTML = '';
+        const characters = await getCharacters(defaultFilters);
+        render({ characters });
+    }, DEBOUNCE_DELAY);
 }
 
-main()
+function handleSearchInputChange(event) {
+    noCharactersFound.innerHTML = '';
+    debounceSearch();
+}
+
+searchInput.addEventListener('keyup', handleSearchInputChange);
+
+function displayNoCharactersMessage(characters) {
+    if (!characters || characters.length === 0) {
+        noCharactersFound.innerHTML = 'Todos os personagem possiveis no atual filtro já foram encontrado. Por favor refaça o filtro.';
+    } else {
+        noCharactersFound.innerHTML = '';
+    }
+}
+
+async function main() {
+    const characters = await getCharacters(defaultFilters);
+    addListeners();
+    render({ characters });
+}
+
+main();
