@@ -15,27 +15,37 @@ const defaultFilters = {
     page: 1
 }
 
-async function getCharacters({ name, species, gender, status, page = 1}) {
-    const response = await fetch(`${API}/character?name=${name}&species=${species}&gender=${gender}&status=${status}&page=${page}`)
-    const characters = await response.json()
+async function getCharacters({ name, species, gender, status, page = 1 }) {
+    try {
+        const response = await fetch(`${API}/character?name=${name}&species=${species}&gender=${gender}&status=${status}&page=${page}`);
 
-    return characters.results
-};
+        if (!response.ok) {
+            throw new Error('Não foi possível obter os personagens. Por favor, tente novamente.');
+        }
+        const characters = await response.json();
+        return characters.results;
+    } catch (error) {
+        console.error('Não localizei na base de dados:', error.message);
+        return []; 
+    }
+}
 
-async function render ({characters}) {
+async function render({ characters }) {
 
-    displayNoCharactersMessage(characters)
-
-    characters?.forEach((character) =>{
-        return charsContainer.innerHTML += `
-        <div class="char">
-            <img src="${character.image}" alt="">
-            <div class="char-info">
-                <h3>${character.name}</h3>
-                <span>${character.species}</span>
-            </div>
-        </div> `  
-    })
+    if (characters && characters.length > 0) {
+        characters.forEach((character) => {
+            charsContainer.innerHTML += `
+                <div class="char">
+                    <img src="${character.image}" alt="">
+                    <div class="char-info">
+                        <h3>${character.name}</h3>
+                        <span>${character.species}</span>
+                    </div>
+                </div>`;
+        });
+    } else {
+        return noCharactersFound.innerHTML = ` <p>Todos os personagem possiveis já foram carregados, por favor refaça o filtro.</p> ` 
+    } 
 }
 
 function handleFilterChange(type, event){
@@ -94,14 +104,6 @@ function handleSearchInputChange() {
 }
 
 searchInput.addEventListener('keyup', handleSearchInputChange);
-
-function displayNoCharactersMessage(characters) {
-    if (!characters || characters.length === 0) {
-        noCharactersFound.innerHTML = 'Todos os personagem possiveis no atual filtro já foram encontrado. Por favor refaça o filtro.';
-    } else {
-        noCharactersFound.innerHTML = '';
-    }
-}
 
 async function main() {
     const characters = await getCharacters(defaultFilters);
